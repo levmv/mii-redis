@@ -15,6 +15,6 @@
     "levmorozov/mii": ">=1.10.0"
   },
   "autoload": {
-    "classmap" : ["Redis.php"]
+    "classmap" : ["Redis.php", "SocketException.php"]
   }
 }
