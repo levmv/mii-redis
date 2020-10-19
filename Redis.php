@@ -71,7 +71,7 @@ use mii\core\Exception;
  * @method mixed del(...$keys) Delete a key. <https://redis.io/commands/del>
  * @method mixed discard() Discard all commands issued after MULTI. <https://redis.io/commands/discard>
  * @method mixed dump($key) Return a serialized version of the value stored at the specified key.. <https://redis.io/commands/dump>
- * @method mixed echo($message) Echo the given string. <https://redis.io/commands/echo>
+ * @method mixed echo ($message) Echo the given string. <https://redis.io/commands/echo>
  * @method mixed eval($script, $numkeys, ...$keys, ...$args) Execute a Lua script server side. <https://redis.io/commands/eval>
  * @method mixed evalsha($sha1, $numkeys, ...$keys, ...$args) Execute a Lua script server side. <https://redis.io/commands/evalsha>
  * @method mixed exec() Execute all commands issued after MULTI. <https://redis.io/commands/exec>
@@ -89,7 +89,6 @@ use mii\core\Exception;
  * @method mixed get($key) Get the value of a key. <https://redis.io/commands/get>
  * @method mixed getbit($key, $offset) Returns the bit value at offset in the string value stored at key. <https://redis.io/commands/getbit>
  * @method mixed getrange($key, $start, $end) Get a substring of the string stored at a key. <https://redis.io/commands/getrange>
- * @method mixed getset($key, $value) Set the string value of a key and return its old value. <https://redis.io/commands/getset>
  * @method mixed hdel($key, ...$fields) Delete one or more hash fields. <https://redis.io/commands/hdel>
  * @method mixed hexists($key, $field) Determine if a hash field exists. <https://redis.io/commands/hexists>
  * @method mixed hget($key, $field) Get the value of a hash field. <https://redis.io/commands/hget>
@@ -135,7 +134,6 @@ use mii\core\Exception;
  * @method mixed pfcount(...$keys) Return the approximated cardinality of the set(s) observed by the HyperLogLog at key(s).. <https://redis.io/commands/pfcount>
  * @method mixed pfmerge($destkey, ...$sourcekeys) Merge N different HyperLogLogs into a single one.. <https://redis.io/commands/pfmerge>
  * @method mixed ping($message = null) Ping the server. <https://redis.io/commands/ping>
- * @method mixed psetex($key, $milliseconds, $value) Set the value and expiration in milliseconds of a key. <https://redis.io/commands/psetex>
  * @method mixed psubscribe(...$patterns) Listen for messages published to channels matching the given patterns. <https://redis.io/commands/psubscribe>
  * @method mixed pubsub($subcommand, ...$arguments) Inspect the state of the Pub/Sub subsystem. <https://redis.io/commands/pubsub>
  * @method mixed pttl($key) Get the time to live for a key in milliseconds. <https://redis.io/commands/pttl>
@@ -166,8 +164,6 @@ use mii\core\Exception;
  * @method mixed select($index) Change the selected database for the current connection. <https://redis.io/commands/select>
  * @method mixed set($key, $value, ...$options) Set the string value of a key. <https://redis.io/commands/set>
  * @method mixed setbit($key, $offset, $value) Sets or clears the bit at offset in the string value stored at key. <https://redis.io/commands/setbit>
- * @method mixed setex($key, $seconds, $value) Set the value and expiration of a key. <https://redis.io/commands/setex>
- * @method mixed setnx($key, $value) Set the value of a key, only if the key does not exist. <https://redis.io/commands/setnx>
  * @method mixed setrange($key, $offset, $value) Overwrite part of a string at key starting at the specified offset. <https://redis.io/commands/setrange>
  * @method mixed shutdown($saveOption = null) Synchronously save the dataset to disk and then shut down the server. <https://redis.io/commands/shutdown>
  * @method mixed sinter(...$keys) Intersect multiple sets. <https://redis.io/commands/sinter>
@@ -234,13 +230,7 @@ use mii\core\Exception;
  * @method mixed hscan($key, $cursor, $MATCH = null, $pattern = null, $COUNT = null, $count = null) Incrementally iterate hash fields and associated values. <https://redis.io/commands/hscan>
  * @method mixed zscan($key, $cursor, $MATCH = null, $pattern = null, $COUNT = null, $count = null) Incrementally iterate sorted sets elements and associated scores. <https://redis.io/commands/zscan>
  *
- * @property string $driverName Name of the DB driver. This property is read-only.
- * @property bool $isActive Whether the DB connection is established. This property is read-only.
- * @property string $connectionString
  * @property resource|false $socket
- *
- * @author Carsten Brandt <mail@cebe.cc>
- * @since 2.0
  */
 class Redis extends Component
 {
@@ -248,10 +238,9 @@ class Redis extends Component
      * @var string data source name: either tcp either unixsocket
      * tcp://domain:port or sock://path/to/unix/socket
      */
-    public string $dsn = 'tcp://localhost:6379';
+    public string $dsn = 'tcp://127.0.0.1:6379';
     /**
      * @var string if the query gets redirected, use this as the temporary new hostname
-     * @since 2.0.11
      */
     public $redirectConnectionString;
 
@@ -306,6 +295,9 @@ class Redis extends Component
      */
     public int $retryInterval = 0;
 
+
+    private $socket = null;
+
     /**
      * @var array redis redirect socket connection pool
      */
@@ -329,14 +321,14 @@ class Redis extends Component
      */
     public function open()
     {
-        if ($this->socket !== false) {
+        if ($this->socket !== null) {
             return;
         }
 
-        $connection = $this->connectionString . ', database=' . $this->database;
+        $connection = $this->dsn . ', database=' . $this->database;
 
-        $socket = @stream_socket_client(
-            $this->connectionString,
+        $this->socket = $socket = @stream_socket_client(
+            $this->dsn,
             $errorNumber,
             $errorDescription,
             $this->connectionTimeout,
@@ -344,10 +336,10 @@ class Redis extends Component
         );
 
         if ($socket) {
-            $this->_pool[ $this->connectionString ] = $socket;
+            $this->_pool[$this->dsn] = $socket;
 
             if ($this->dataTimeout !== null) {
-                stream_set_timeout($socket, $timeout = (int) $this->dataTimeout, (int) (($this->dataTimeout - $timeout) * 1000000));
+                stream_set_timeout($socket, $timeout = (int)$this->dataTimeout, (int)(($this->dataTimeout - $timeout) * 1000000));
             }
             if ($this->password !== null) {
                 $this->executeCommand('AUTH', [$this->password]);
@@ -367,7 +359,6 @@ class Redis extends Component
     public function close(): void
     {
         foreach ($this->_pool as $socket) {
-            $connection = $this->connectionString . ', database=' . $this->database;
             try {
                 $this->executeCommand('QUIT');
             } catch (SocketException $e) {
@@ -388,7 +379,7 @@ class Redis extends Component
      * ```
      *
      * @param string $name name of the missing method to execute
-     * @param array $params method call arguments
+     * @param array  $params method call arguments
      * @return mixed
      */
     public function __call($name, $params)
@@ -410,12 +401,12 @@ class Redis extends Component
      * ```
      *
      * @param string $name the name of the command
-     * @param array $params list of parameters for the command
+     * @param array  $params list of parameters for the command
      * @return array|bool|null|string Dependent on the executed command this method
      * will return different data types:
      *
      * - `true` for commands that return "status reply" with the message `'OK'` or `'PONG'`.
-     * - `string` for commands that return "status reply" that does not have the message `OK` (since version 2.0.1).
+     * - `string` for commands that return "status reply" that does not have the message `OK`.
      * - `string` for commands that return "integer reply"
      *   as the value is in the range of a signed 64 bit integer.
      * - `string` or `null` for commands that return "bulk reply".
@@ -475,7 +466,7 @@ class Redis extends Component
     }
 
     /**
-     * @param array $params
+     * @param array       $params
      * @param string|null $command
      * @return mixed
      * @throws Exception on error
@@ -505,7 +496,7 @@ class Redis extends Component
 
                 throw new Exception("Redis error: " . $line . "\nRedis command was: " . $prettyCommand);
             case ':': // Integer reply
-                return (int) $line;
+                return (int)$line;
             case '$': // Bulk replies
                 if ($line == '-1') {
                     return null;
@@ -522,7 +513,7 @@ class Redis extends Component
 
                 return substr($data, 0, -2);
             case '*': // Multi-bulk replies
-                $count = (int) $line;
+                $count = (int)$line;
                 $data = [];
                 for ($i = 0; $i < $count; $i++) {
                     $data[] = $this->parseResponse($params);
@@ -546,7 +537,7 @@ class Redis extends Component
     /**
      * @param string $redirect
      * @param string $command
-     * @param array $params
+     * @param array  $params
      * @return mixed
      * @throws Exception
      * @throws SocketException
@@ -558,7 +549,7 @@ class Redis extends Component
         $this->redirectConnectionString = $responseParts[2] ?? null;
 
         if ($this->redirectConnectionString) {
-            \Mii::info('Redirecting to ' . $this->connectionString, __METHOD__);
+            \Mii::info('Redirecting to ' . $this->redirectConnectionString, __METHOD__);
 
             $this->open();
 
