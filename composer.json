@@ -1,5 +1,5 @@
 {
-  "name": "levmorozov/mii-redis",
+  "name": "levmv/mii-redis",
   "type": "library",
   "description": "Mii redis component",
   "minimum-stability": "dev",
@@ -8,11 +8,11 @@
     "mii",
     "redis"
   ],
-  "homepage": "https://github.com/levmorozov/mii-redis",
+  "homepage": "https://github.com/levmv/mii-redis",
   "license": "MIT",
   "require": {
-    "php": ">=7.4",
-    "levmorozov/mii": ">=1.10.0"
+    "php": ">=8.0",
+    "levmorozov/mii": ">=1.11.0"
   },
   "autoload": {
     "classmap" : ["Redis.php", "SocketException.php"]

@@ -6,7 +6,6 @@
 namespace mii\redis;
 
 use mii\core\Component;
-use mii\core\ErrorException;
 use mii\core\Exception;
 
 /**
@@ -259,9 +258,9 @@ class Redis extends Component
      */
     public float $connectionTimeout = 10;
     /**
-     * @var float timeout to use for redis socket when reading and writing data. If not set the php default value will be used.
+     * @var float|null timeout to use for redis socket when reading and writing data. If not set the php default value will be used.
      */
-    public float $dataTimeout = 10;
+    public ?float $dataTimeout = 10;
 
     /**
      * @var integer Bitmask field which may be set to any combination of connection flags passed to [stream_socket_client()](https://www.php.net/manual/en/function.stream-socket-client.php).
