@@ -12,7 +12,7 @@
   "license": "MIT",
   "require": {
     "php": ">=8.0",
-    "levmorozov/mii": ">=1.11.0"
+    "levmv/mii": ">=1.11.0"
   },
   "autoload": {
     "classmap" : ["Redis.php", "SocketException.php"]
